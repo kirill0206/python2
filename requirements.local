@@ -1,0 +1,7 @@
+# environment linting (PyCharm preinstalled)
+pylint
+autopep8
+
+# environment slell
+ipython
+jupyter
