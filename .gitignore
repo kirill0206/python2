@@ -1,2 +1,4 @@
 .venv
 venv/
+tests.py
+__pycache__
