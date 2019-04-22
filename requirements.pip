@@ -1,2 +1,8 @@
+autopep8==1.4.3
 chardet==3.0.4
-pyyaml
+jupyter==1.0.0
+pip-chill==0.1.8
+pylint==2.3.1
+pytest==4.4.1
+pyyaml==5.1
+whatever==0.5
