@@ -2,3 +2,5 @@
 venv/
 tests.py
 __pycache__
+*.log
+.coverage

@@ -2,6 +2,9 @@ import yaml
 import socket
 import json
 import argparse
+import logging
+import logging.handlers
+
 from settings import (HOST, PORT, BUFFERSIZE, ENCODING)
 
 
@@ -36,12 +39,38 @@ if args.address:
 if args.port:
     port = args.port
 
+LOG_FILENAME = 'log/client.log'
+
+logger = logging.getLogger('client')
+logging.basicConfig(
+    filename=LOG_FILENAME,
+    filemode='w+',
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+formatter = logging.Formatter(
+    '%(asctime)-10s - %(levelname)-8s - %(name)-6s - %(message)s'
+)
+
+handler = logging.handlers.RotatingFileHandler(
+    LOG_FILENAME,
+    maxBytes=1024,
+    backupCount=7,
+    encoding=ENCODING,
+)
+
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+
+logger.addHandler(handler)
+
 
 try:
     sock = socket.socket()
     sock.connect((host, port))
 
-    print(f'Client started.\nConnecting to {host}:{port}')
+    logging.info(f'Client started.\nConnecting to {host}:{port}')
 
     data = input('Input data to send')
     request = json.dumps(
@@ -53,8 +82,8 @@ try:
     b_data = sock.recv(buffersize)
     response = json.loads(b_data.decode(encoding))
 
-    print(response)
+    logging.info('Get response: ', response)
     sock.close()
 
 except KeyboardInterrupt:
-    print('Client closed')
+    logging.info('Client closed')
