@@ -1,8 +1,8 @@
 
 from .controllers import get_echo
 
-actionnames = [
+actionnames = (
     {'actions': 'echo',
-     'controller': get_echo,
-     }
-]
+     'controller': get_echo
+     },
+)

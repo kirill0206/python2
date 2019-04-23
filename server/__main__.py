@@ -2,16 +2,18 @@ import yaml
 import json
 import socket
 import argparse
+import logging
+import logging.handlers
 
-from .actions import (
+from actions import (
     resolve, get_server_actions
     )
 
-from .protocol import (
+from protocol import (
     validate_request, make_response, make_400, make_404
     )
 
-from .settings import (
+from settings import (
     HOST, PORT, BUFFERSIZE, ENCODING
     )
 
@@ -52,6 +54,30 @@ if args.address:
 if args.port:
     port = args.port
 
+LOG_FILENAME = 'log/server.log'
+
+logger = logging.getLogger('server')
+logging.basicConfig(
+    filename=LOG_FILENAME,
+    level=logging.DEBUG,
+)
+
+formatter = logging.Formatter(
+    '%(asctime)-10s: %(levelname)-6s - %(name)-6s - %(message)s'
+)
+
+handler = logging.handlers.RotatingFileHandler(
+    LOG_FILENAME,
+    maxBytes=1024,
+    backupCount=7,
+    encoding=ENCODING,
+)
+
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+
+logger.addHandler(handler)
+
 
 try:
     sock = socket.socket()
@@ -59,11 +85,11 @@ try:
     sock.listen(10)
     server_actions = get_server_actions()
 
-    print(f'Server started on {host}:{port}')
+    logger.info(f'Server started on {host}:{port}')
 
     while True:
         client, address = sock.accept()
-        print(f'Client with address {address} was detected')
+        logger.info(f'Client with address {address} was detected')
 
         b_request = client.recv(buffersize)
         request = json.loads(b_request.decode(encoding))
@@ -76,17 +102,17 @@ try:
                 try:
                     response = controller(request)
                 except Exception as err:
-                    print(err)
+                    logger.critical(err)
                     response = make_response(
                         request, 500, 'Internal server error'
                     )
 
             else:
-                print(f'Action with name {action_name} does not exists')
+                logger.error(f'Action with name {action_name} does not exists')
                 response = make_404(request)
 
         else:
-            print(f'Request is not valid')
+            logger.error(f'Request is not valid')
             response = make_400(request)
 
         s_response = json.dumps(response)
@@ -95,4 +121,4 @@ try:
         client.close()
 
 except KeyboardInterrupt:
-    print('Server closed')
+    logger.info('Server closed')

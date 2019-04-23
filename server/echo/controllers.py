@@ -1,6 +1,6 @@
 __author__ = 'ACV'
 
-from ..protocol import make_response
+from protocol import make_response
 
 
 def get_echo(request):
