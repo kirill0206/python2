@@ -43,7 +43,6 @@ if args.port:
 #add logging
 LOG_FILENAME = 'log/client.log'
 logging.basicConfig(
-    filemode='w+',
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
@@ -59,7 +58,7 @@ try:
 
     logging.info(f'Client started.\nConnecting to {host}:{port}')
 
-    action = input('Enter action name')
+    action = input('Enter action name').strip()
     data = input('Input data to send')
     request = json.dumps(
         {

@@ -5,6 +5,7 @@ import argparse
 import logging
 import logging.handlers
 
+
 from actions import (
     resolve, get_server_actions
     )
@@ -57,12 +58,11 @@ if args.port:
 LOG_FILENAME = 'log/server.log'
 
 logging.basicConfig(
-    filemode='w+',
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(LOG_FILENAME, encoding=ENCODING),
-        logging.StreamHandler(),
+        logging.StreamHandler()
         ]
     )
 
@@ -71,6 +71,7 @@ try:
     sock = socket.socket()
     sock.bind((host, port))
     sock.listen(10)
+
     server_actions = get_server_actions()
 
     logging.info(f'Server started on {host}:{port}')
@@ -85,7 +86,7 @@ try:
         action_name = request.get('action')
 
         if validate_request(request):
-            controller = resolve(action_name, server_actions)
+            controller = resolve(action_name)
             if controller:
                 try:
                     response = controller(request)
