@@ -4,6 +4,7 @@ import json
 import argparse
 import logging
 import logging.handlers
+from datetime import datetime
 
 from settings import (HOST, PORT, BUFFERSIZE, ENCODING)
 
@@ -39,31 +40,16 @@ if args.address:
 if args.port:
     port = args.port
 
+#add logging
 LOG_FILENAME = 'log/client.log'
-
-logger = logging.getLogger('client')
 logging.basicConfig(
-    filename=LOG_FILENAME,
-    filemode='w+',
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-formatter = logging.Formatter(
-    '%(asctime)-10s - %(levelname)-8s - %(name)-6s - %(message)s'
-)
-
-handler = logging.handlers.RotatingFileHandler(
-    LOG_FILENAME,
-    maxBytes=1024,
-    backupCount=7,
-    encoding=ENCODING,
-)
-
-handler.setFormatter(formatter)
-handler.setLevel(logging.DEBUG)
-
-logger.addHandler(handler)
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding=ENCODING),
+        logging.StreamHandler(),
+        ]
+    )
 
 
 try:
@@ -72,9 +58,14 @@ try:
 
     logging.info(f'Client started.\nConnecting to {host}:{port}')
 
+    action = input('Enter action name').strip()
     data = input('Input data to send')
     request = json.dumps(
-        {'data': data}
+        {
+            'action': action,
+            'data': data,
+            'time': datetime.now().timestamp()
+        }
     )
 
     sock.send(request.encode(encoding))
