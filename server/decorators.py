@@ -1,9 +1,14 @@
 
 __author__ = 'ACV'
+
 import logging
 from functools import wraps
 from datetime import datetime
+from protocol import make_403
 from settings import ENCODING
+import zlib
+
+
 logger = logging.getLogger('decorators')
 
 
@@ -17,9 +22,6 @@ def logged(func):
 
 
 def log(func):
-    """
-    Логируем какая функция вызывается.
-    """
 
     def wrap_log(*args, **kwargs):
         name = func.__name__
@@ -37,3 +39,24 @@ def log(func):
         return func
 
     return wrap_log
+
+
+def login_required(func):
+    @wraps(func)
+    def wrapper(request, *args, **kwargs):
+        if request.get('user'):
+            return func(request, *args, **kwargs)
+
+        return make_403(request)
+
+    return wrapper
+
+
+def compressed(func):
+    @wraps(func)
+    def wrapper(request, *args, **kwargs):
+        b_request = zlib.decompress(request)
+        b_response = func(b_request, *args, **kwargs)
+        return zlib.compress(b_response)
+
+    return wrapper

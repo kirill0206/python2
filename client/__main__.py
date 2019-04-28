@@ -4,6 +4,8 @@ import json
 import argparse
 import logging
 import logging.handlers
+import hashlib
+import zlib
 from datetime import datetime
 
 from settings import (HOST, PORT, BUFFERSIZE, ENCODING)
@@ -27,6 +29,11 @@ parser.add_argument(
     '-p', '--port', type=int, default=port,
     help='Set server PORT number for connection'
 )
+parser.add_argument(
+    '-m', '--mode', type=str, default='w',
+    help='Set client working mode: w - writing, or l - listening'
+)
+
 args = parser.parse_args()
 if args.config:
     with open(args.config) as file:
@@ -58,23 +65,44 @@ try:
 
     logging.info(f'Client started.\nConnecting to {host}:{port}')
 
-    action = input('Enter action name').strip()
-    data = input('Input data to send')
-    request = json.dumps(
-        {
-            'action': action,
-            'data': data,
-            'time': datetime.now().timestamp()
-        }
-    )
+    if args.mode == 'w':
+        while True:
+            hash_obj = hashlib.sha256()
+            hash_obj.update(
+                str(datetime.now().timestamp()).encode(ENCODING)
+            )
 
-    sock.send(request.encode(encoding))
+            action = input('Enter action name: ')
+            data = input('Enter data to send: ')
 
-    b_data = sock.recv(buffersize)
-    response = json.loads(b_data.decode(encoding))
+            request = json.dumps(
+                {
+                    'action': action,
+                    'data': data,
+                    'time': datetime.now().timestamp(),
+                    'user': hash_obj.hexdigest()
+                }
+            )
 
-    logging.info('Get response: ', response)
-    sock.close()
+            sock.send(
+                zlib.compress(
+                    request.encode(encoding)
+                )
+            )
+    elif args.mode == 'l':
+        while True:
+            b_data = sock.recv(buffersize)
+
+            b_response = zlib.decompress(b_data)
+
+            response = json.loads(
+                b_response.decode(encoding)
+            )
+
+            print(response)
+    else:
+        logging.info(f'Wrong mode argument {args.mode}')
 
 except KeyboardInterrupt:
     logging.info('Client closed')
+    sock.close()
