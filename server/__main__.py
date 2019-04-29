@@ -4,6 +4,7 @@ import socket
 import argparse
 import select
 import logging
+import threading
 import logging.handlers
 
 from handlers import handle_default_request
@@ -71,6 +72,14 @@ requests = []
 connections = []
 
 
+def read(client, request, buffersize):
+    b_request = client.recv(buffersize)
+    request.append(b_request)
+
+
+def write(client, response):
+    client.send(b_response)
+
 try:
     sock = socket.socket()
     sock.bind((host, port))
@@ -92,15 +101,24 @@ try:
         )
 
         for r_client in rlist:
-            b_request = r_client.recv(buffersize)
-            requests.append(b_request)
+            r_thread = threading.Thread(
+                target=read,
+                args=(r_client, requests, buffersize),
+                daemon=True,
+            )
+            r_thread.start()
 
         if requests:
             b_request = requests.pop()
             b_response = handle_default_request(b_request)
 
             for w_client in wlist:
-                w_client.send(b_response)
+                w_thread = threading.Thread(
+                    target=write,
+                    args=(w_client, b_response),
+                    daemon=True,
+                )
+                w_thread.start()
 
 except KeyboardInterrupt:
     logging.info('Server closed')
